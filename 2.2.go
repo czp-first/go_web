@@ -130,3 +130,74 @@ const (
 	w  // 常量声明省略值时，默认和之前一个值的字面相同。这里隐式地说w = iota, 因此w == 3
 )
 const v = iota  // 每遇到一个const关键字，iota就会重置，此时v == 0
+
+//array slice map
+// array
+// array 是数组
+// 定义
+var arr [n]type
+// n表示数组的长度，type表示存储元素的类型
+var arr [10]int
+arr[0] = 42
+arr[1] = 13
+fmt.Printf("The first element is %d\n", arr[0])
+fmt.Printf("The last element is %d\n", arr[9])
+// 长度也是数组类型的一部分，[3]int和[4]int是不同的类型，数组也就不能改变长度。数组之间的赋值是值的赋值，即当把一个数组作为参数掺入函数的时候，传入的其实是该数组的副本，而不是它的指针
+// 数组可以使用:=声明
+a := [3]int{1, 2, 3}
+b := [10]int{1, 2, 3}
+c := [...]int{4, 5. 6}  // 可以省略长度而采用`...`, go会自动根据元素个数来计算长度
+// go支持嵌套数组，即多维数组
+doubleArray := [2][4]int{[4]int{1, 2, 3, 4}, [4]int{5, 6, 7, 8}}  // 声明了一个二维数组，该数组以两个数组作为元素，其中每个数组中又有4个int类型的元素
+easyArray := [2][4]int{{1, 2, 3, 4}, {5, 6, 7, 8}}  // 如果内部的元素和外部的一样，那么上面的声明可以简化，直接忽略内部的类型
+
+// slice
+// 有时，在初始定义数组时，并不知道需要多大的数组，因此需要 动态数组 。go中这种数据结构叫做slice
+// slice并不是真正意义上的动态数组，而是一个引用类型。slice总是指向一个底层array，slice的声明也可以像array一样，只是不需要长度
+
+// 和声明array，并初始化数据
+var fslice []int
+slice := []byte{'a', 'b'. 'c', 'd'}
+// slice可以从一个数组或一个已经存在的slice中再次声明。slice通过array[i:j]来获取
+// 声明一个含有10个元素元素类型为byte的数组
+var ar = [10]byte{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'}
+// 声明两个含有byte的slice
+var a, b []byte
+a = ar[2:5] 
+b = ar[3:5]  // b是数组ar的另一个slice
+// 注意slice和数组在声明时的区别：声明数组时，方括号内写明了数组的长度或使用...自动计算长度，而声明slice时，方括号内没有任何字符
+// slice有一些简便操作
+// slice的默认开始位置是0，ar[:n]等价于ar[0:n]
+// slice的第二个序列默认是数组的长度，ar[n:]等价于ar[n:len(ar)]
+// 如果从一个数组里面直接获取slice，可以这样ar[:]. 因为默认第一个序列是0，第二个是数组的长度，即等价于ar[0:len(ar)]
+var array = [10]byte{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'}
+var aSlice, bSlice []byte
+aSlice = array[:3]
+bSlice = array[5:]
+aSlice = array[:]
+// 从slice中获取slice
+aSlice = array[3:7]
+bSlice = aSlice[1:3]
+bSlice = aSlice[:3]
+bSlice = aSlice[0:5]
+bSlice = aSlice[:]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
