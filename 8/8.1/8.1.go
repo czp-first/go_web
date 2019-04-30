@@ -44,13 +44,53 @@ func ResolveTCPAddr(net, addr string) (*TCPAddr, os.Error)
 
 // TCP client
 // 共中通过net包中的DialTCP函数来建立一个TCP连接，并返回一个TCPConn类型的对象，当连接建立时服务器端也创建一个同类型的对象，此时客户端和服务器端通过各自拥有的TCPConn对象来进行数据交换。一般而言，客户端通过TCPConn对象将信息发送到服务器端，读取服务器端响应的信息。服务器端读取并解析来自客户端的请求，并返回应答信息，这个连接只有当任一端关闭了连接之后才失效，不然这连接可以一直在使用。建立连接的函数定义如下：
+func DialTCP(net string, laddr, raddr *TCPAddr) (c *TCPConn, err os.Error)
+//	net参数是"tcp4"、"tcp6"、"tcp"中的任意一个，分别表示TCP(IPv4-only)、TCP(IPv6-only)或者TCP(IPv4,IPv6的任意一个)
+//	laddr表示本机地址，一般设置为nil
+//	raddr表示远程的服务地址
+// 接下来写一个简单的例子，模拟一个基于HTTP协议的客户端请求去连接一个web服务端。写一个简单的http请求头，格式类似如下
+// "HEAD / HTTP/1.0\r\n\r\n"
+// 从服务端接收到的响应信息格式可能如下
+HTTP/1.0 200 ok
+ETag: "-9985996"
+Last-Modified: Thu, 25 Mar 2010 17:51:10 GMT
+Content-Length: 18074
+Connection: close
+Date: Sat, 28 Aug 2010 00:43:48 GMT
+Server: lighttpd/1.4.23
+// 客户端代码: client.go
+// 从代码中可以看出：首先程序将用户的输入作为参数service传入net.ResolveTCPAddr获取一个tcpAddr，然后tcpAddr传入DialTCP后创建了一个TCP连接conn，通过conn来发送请求信息，最后通过ioutil.ReadAll从conn中读取全部的文本，也就是服务端响应反馈的信息
 
 
+// TCP server
+// 上面是一个TCP的客户端程序，也可以通过net包来创建一个服务器端程序，在服务器端需要绑定服务到指定的非激活端口，并监听此端口，当有客户端请求到达的时候可以接受来自客户端连接的请求。net包中有相应功能的函数，函数定义如下：
+func ListenTCP(net string, laddr *TCPAddr) (l *TCPListener, err os.Error)
+func (l *TCPListener) Accept() (c Conn, err os.Error)
+// 参数说明同DialTCP的参数一样。下面实现一个简单的时间同步服务，监听7777端口
+// server.go
+// 上面的服务跑起来之后，它将会一直在那里等待，知道有新的客户端请求到达。当有客户端请求到达并统一接受Accept该请求的时候它会反馈当前的时间信息。
+// 值得注意的是，在代码的for循环里，当有错误发生时，直接continue而不是退出，是因为在服务器端跑代码的时候，当有错误发生的情况下最后是由服务端记录错误，然后当前连接的客户端直接报错而退出，从而不会影响当前服务端运行的整个服务
+// 上面的代码有个缺点，执行的时候是单任务的，不能同时接受多个请求，那么该如何改造以使它支持多并发呢？go里面有一个goroutine机制，请看下面改造后的代码
+// server_goroutine.go
+// 通过把业务处理分离到函数handlerClient，就可以进一步地实现多并发执行了。
+
+// 控制TCP连接
+// TCP有很多连接控制函数，平常用到比较多的有如下几个函数
+func (c *TCPConn) SetTimeout(nsec int64) os.Error
+func (c *TCPConn) SetKeepAlive(keepalive bool) os.Error
+// 第一个函数用来设置连接的超时时间，客户端和服务器端都适用，当超过设置的时间时该连接就会失效
+// 第二个函数用来设置客户端是否和服务端一直保持着连接，即使没有任何的数据发送
 
 
-
-
-
+// UDP Socket
+// go中处理UDP Socket和TCP Socket不同的地方就是在服务器端处理多个客户端请求数据包的方式不同，UDP缺少了对客户端连接请求的Accept函数。其他基本几乎一摸一样，只有TCP换成了UDP而已。UDP的几个主要函数如下所示
+func ResolveUDPAddr(net, addr string) (*UDPAddr, os.Error)
+func DialUDP(net string, laddr, raddr *UDPAddr) (c *UDPConn, err os.Error)
+func ListenUDP(net string, laddr *UDPAddr) (c *UDPConn, err os.Error)
+func (c *UDPConn) ReadFromUDP(b []byte) (n int, addr *UDPAddr, err os.Error)
+func (c *UDPConn) WriteToUDP(b []byte, addr *UDPAddr) (n int, err os.Error)
+// UDP客户端：udp_client.go
+// UDP服务端：udp_server.go
 
 
 
